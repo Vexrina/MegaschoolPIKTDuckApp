@@ -32,7 +32,7 @@ class DuckViewModel(private val duckRepository: DuckRepository) : ViewModel() {
                 Log.d("Success", "get status code duck")
                 _bitmapLiveData.postValue(bitmap)
             } ?: run {
-                fetchRandomDuck(owner)
+                _errorLiveData.postValue("Failed to fetch duck")
             }
         }
     }

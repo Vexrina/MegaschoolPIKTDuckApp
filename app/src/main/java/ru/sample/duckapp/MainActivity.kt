@@ -1,6 +1,8 @@
 package ru.sample.duckapp
 
 import DuckViewModel
+import android.app.AlertDialog
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
@@ -24,24 +26,32 @@ class MainActivity : AppCompatActivity() {
             loadImage(imageUrl)
         })
 
-        viewModel.bitmapLiveData.observe(this, Observer{bitmap->
+        viewModel.bitmapLiveData.observe(this, Observer { bitmap ->
             imageViewDuck.setImageBitmap(bitmap)
         })
 
         viewModel.errorLiveData.observe(this, Observer<String> { error ->
-            // Обработка ошибки, если необходимо
+            showErrorDialog(this, "Произошла неконтролируемая ошибка")
         })
 
 
         val buttonFetchDuck: Button = findViewById(R.id.buttonFetchDuck)
         val editText: EditText = findViewById(R.id.statusCodeEntry)
 
+        val listStatusCodes = setOf<String>(
+            "100", "200", "301", "302", "400", "403", "404",
+            "409", "413", "418", "420", "426", "429", "451", "500"
+        )
+
         buttonFetchDuck.setOnClickListener {
             val str = editText.text.toString()
             if (str.isEmpty()) {
-                viewModel.fetchRandomDuck(this,)
+                viewModel.fetchRandomDuck(this)
+            } else if (str.trimStart('0') !in listStatusCodes) {
+                val errorMessage = "Ошибка: Статус код $str не поддерживается API."
+                showErrorDialog(this, errorMessage)
             } else {
-                viewModel.fetchStatusCodeDuck(this, str)
+                viewModel.fetchStatusCodeDuck(this, str.trimStart('0'))
             }
         }
 
@@ -52,5 +62,16 @@ class MainActivity : AppCompatActivity() {
         Glide.with(this)
             .load(imageUrl)
             .into(imageViewDuck)
+    }
+
+    private fun showErrorDialog(context: Context, errorMessage: String) {
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("Ошибка")
+        builder.setMessage(errorMessage)
+        builder.setPositiveButton(":C") { dialog, _ ->
+            dialog.dismiss()
+        }
+        val dialog = builder.create()
+        dialog.show()
     }
 }
